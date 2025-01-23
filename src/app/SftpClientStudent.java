@@ -1,3 +1,5 @@
+package app;
+
 import com.jcraft.jsch.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,7 +51,7 @@ public class SftpClientStudent {
             System.out.println("6. Завершить программу");
 
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine();  // Consume newline
             switch (choice) {
                 case 1:
                     viewDomainIpPairs();
@@ -101,7 +103,7 @@ public class SftpClientStudent {
         }
     }
 
-    public void getIpByDomain(String domain) {
+    public String getIpByDomain(String domain) {
         try {
             InputStream inputStream = channelSftp.get(REMOTE_FILE_PATH);
             ObjectMapper objectMapper = new ObjectMapper();
@@ -110,17 +112,17 @@ public class SftpClientStudent {
 
             for (Map<String, String> entry : domainIpList) {
                 if (entry.get("domain").equals(domain)) {
-                    System.out.println("IP-адрес: " + entry.get("ip"));
-                    return;
+                    return entry.get("ip");
                 }
             }
-            System.out.println("Домен не найден.");
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    public void getDomainByIp(String ip) {
+    public String getDomainByIp(String ip) {
         try {
             InputStream inputStream = channelSftp.get(REMOTE_FILE_PATH);
             ObjectMapper objectMapper = new ObjectMapper();
@@ -129,14 +131,14 @@ public class SftpClientStudent {
 
             for (Map<String, String> entry : domainIpList) {
                 if (entry.get("ip").equals(ip)) {
-                    System.out.println("Домен: " + entry.get("domain"));
-                    return;
+                    return entry.get("domain");
                 }
             }
-            System.out.println("IP-адрес не найден.");
+            return null;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
     public void addDomainIpPair(String domain, String ip) {
@@ -206,5 +208,19 @@ public class SftpClientStudent {
         if (session != null && session.isConnected()) {
             session.disconnect();
         }
+    }
+    public Session getSession() {
+        return session;
+    }
+    public List<Map<String, String>> getDomainIpPairs() {
+        try {
+            InputStream inputStream = channelSftp.get(REMOTE_FILE_PATH);
+            ObjectMapper objectMapper = new ObjectMapper();
+            Map<String, Object> data = objectMapper.readValue(inputStream, Map.class);
+            return (List<Map<String, String>>) data.get("addresses");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return Collections.emptyList();
     }
 }
